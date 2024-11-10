@@ -1,9 +1,10 @@
 package com.itec0401.backend.domain.clothing.entity;
 
-import com.itec0401.backend.domain.clothing.entity.type.weatherType;
+import com.itec0401.backend.domain.clothing.entity.type.*;
 import com.itec0401.backend.domain.coordinationclothing.entity.CoordinationClothing;
 import com.itec0401.backend.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,21 +18,35 @@ public class Clothing {
     @Column(name = "clothing_id")
     private Long id;
 
+    private String imageUri;
+
+    private String name;
+
     @Enumerated(EnumType.STRING)
-    private weatherType weather;
+    private Category mainCategory;
 
-    // 다른 특징들을 enum 화 할건지 테이블 만들어서 쓸 건지 결정 해야함!
-    private String category;
+    @Enumerated(EnumType.STRING)
+    private Category subCategory;
 
-    private String subCategory;
+    @Enumerated(EnumType.STRING)
+    private ColorType baseColor;
 
-    private String textile;
+    @Enumerated(EnumType.STRING)
+    private ColorType pointColor;
 
-    private String pattern;
+    @Enumerated(EnumType.STRING)
+    private TextileType textile;
 
-    private String baseColor;
+    @Enumerated(EnumType.STRING)
+    private PatternType pattern;
 
-    private String pointColor;
+    @Enumerated(EnumType.STRING)
+    private SeasonType season;
+
+    @Enumerated(EnumType.STRING)
+    private StyleType style;
+
+    private String description;
 
     @OneToMany(mappedBy = "clothing")
     private List<CoordinationClothing> coordinationClothingList;
@@ -39,5 +54,32 @@ public class Clothing {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Builder
+    public Clothing(String imageUri,
+                    String name,
+                    String mainCategory,
+                    String subCategory,
+                    String baseColor,
+                    String pointColor,
+                    String textile,
+                    String pattern,
+                    String season,
+                    String style,
+                    String description,
+                    User user) {
+        this.imageUri = imageUri;
+        this.name = name;
+        this.mainCategory = Category.convertString(mainCategory);
+        this.subCategory = Category.convertString(subCategory);
+        this.baseColor = ColorType.convertString(baseColor);
+        this.pointColor = ColorType.convertString(pointColor);
+        this.textile = TextileType.convertString(textile);
+        this.pattern = PatternType.convertString(pattern);
+        this.season = SeasonType.convertString(season);
+        this.style = StyleType.convertString(style);
+        this.description = description;
+        this.user = user;
+    }
 
 }

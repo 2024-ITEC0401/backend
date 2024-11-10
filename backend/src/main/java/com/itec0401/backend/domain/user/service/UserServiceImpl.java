@@ -36,9 +36,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public ResponseEntity<UserInfoDto> getUserProfile(Authentication authentication){
-        // Authentication으로 이메일 파싱
-        String email = authentication.getName();
-        Optional<User> user = userRepository.findByEmail(email);
+        Optional<User> user = checkPermission(authentication);
         if (user.isEmpty()){
             return new ResponseEntity<>(UserInfoDto.builder().build(), HttpStatus.BAD_REQUEST);
         }
@@ -91,12 +89,17 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public Optional<User> checkPermission(Authentication authentication){
+        String email = authentication.getName();
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
     @Transactional
     public ResponseEntity<UserInfoDto> updateUserProfile(UpdateUserProfileDto updateUserProfileDto, Authentication authentication){
         // Authentication으로 이메일 파싱
-        String email = authentication.getName();
         // 이메일로 유저 불러오기 (없는 경우는 없겠지만 혹시나 모르니 분기)
-        Optional<User> user = userRepository.findByEmail(email);
+        Optional<User> user = checkPermission(authentication);
         if (user.isEmpty()){
             return new ResponseEntity<>(UserInfoDto.builder().build(), HttpStatus.BAD_REQUEST);
         }
