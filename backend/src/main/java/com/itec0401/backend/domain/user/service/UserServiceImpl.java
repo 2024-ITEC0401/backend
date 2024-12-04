@@ -96,12 +96,12 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public ResponseEntity<UserInfoDto> updateUserProfile(UpdateUserProfileDto updateUserProfileDto, Authentication authentication){
+    public ResponseEntity<Void> updateUserProfile(UpdateUserProfileDto updateUserProfileDto, Authentication authentication){
         // Authentication으로 이메일 파싱
         // 이메일로 유저 불러오기 (없는 경우는 없겠지만 혹시나 모르니 분기)
         Optional<User> user = checkPermission(authentication);
         if (user.isEmpty()){
-            return new ResponseEntity<>(UserInfoDto.builder().build(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         User validUser = user.get();
 
@@ -120,6 +120,6 @@ public class UserServiceImpl implements UserService{
         }
         validUser.update(updateUserProfileDto);
         userRepository.save(validUser);
-        return new ResponseEntity<>(UserInfoDto.toDto(validUser), HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -38,3 +38,5 @@ out/
 
 ### Ignore DB Password
 src/main/resources/application-secret.yml
+dev.env
+ec2.dev

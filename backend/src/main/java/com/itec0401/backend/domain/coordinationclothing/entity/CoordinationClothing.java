@@ -3,6 +3,7 @@ package com.itec0401.backend.domain.coordinationclothing.entity;
 import com.itec0401.backend.domain.clothing.entity.Clothing;
 import com.itec0401.backend.domain.coordination.entity.Coordination;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,4 +21,10 @@ public class CoordinationClothing {
     @ManyToOne
     @JoinColumn(name = "coordination_id")
     private Coordination coordination;
+
+    @Builder
+    public CoordinationClothing(Clothing clothing, Coordination coordination) {
+        this.clothing = clothing;
+        this.coordination = coordination;
+    }
 }

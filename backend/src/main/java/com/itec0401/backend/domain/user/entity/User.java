@@ -1,5 +1,6 @@
 package com.itec0401.backend.domain.user.entity;
 
+import com.itec0401.backend.domain.clothing.entity.Clothing;
 import com.itec0401.backend.domain.coordination.entity.Coordination;
 import com.itec0401.backend.domain.user.dto.UpdateUserProfileDto;
 import com.itec0401.backend.domain.user.dto.UserRequestDto;
@@ -45,6 +46,9 @@ public class User extends BaseEntityWithUpdatedAt {
     private double height;
     private double weight;
     private String tone;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Clothing> clothingList;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Coordination> coordinationList;

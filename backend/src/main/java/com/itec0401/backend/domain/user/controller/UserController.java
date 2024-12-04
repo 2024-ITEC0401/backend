@@ -38,7 +38,7 @@ public class UserController {
             }
     )
     @PutMapping("/profile")
-    public ResponseEntity<UserInfoDto> updateUserProfile(@RequestBody UpdateUserProfileDto updateUserProfileDto, Authentication authentication) {
+    public ResponseEntity<Void> updateUserProfile(@RequestBody UpdateUserProfileDto updateUserProfileDto, Authentication authentication) {
         return userService.updateUserProfile(updateUserProfileDto, authentication);
     }
 

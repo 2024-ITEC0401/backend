@@ -13,5 +13,5 @@ public interface UserService {
     ResponseEntity<String> signIn(MemberDTO memberDTO);
     ResponseEntity<Boolean> isEmailEmpty(String email);
     Optional<User> checkPermission(Authentication authentication);
-    ResponseEntity<UserInfoDto> updateUserProfile(UpdateUserProfileDto updateUserProfileDto, Authentication authentication);
+    ResponseEntity<Void> updateUserProfile(UpdateUserProfileDto updateUserProfileDto, Authentication authentication);
 }

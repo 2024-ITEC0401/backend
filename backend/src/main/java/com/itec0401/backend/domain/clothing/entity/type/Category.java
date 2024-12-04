@@ -128,10 +128,10 @@ public enum Category {
         return title;
     }
 
-    // 부모카테고리 Getter (Name 반환하도록 수정했음)
+    // 부모카테고리 Getter - 한글(title)을 반환해야함
     public String getParentCategoryName() {
         Optional<Category> category = Optional.ofNullable(parentCategory);
-        return category.map(Enum::name).orElse("INVALID");
+        return category.map(Category::getTitle).orElse("예외");
     }
 
     // 자식카테고리 Getter
@@ -161,9 +161,9 @@ public enum Category {
         return Objects.nonNull(category.parentCategory) && this.contains(category.parentCategory);
     }
 
-    public static Category convertString(String title) {
+    public static Category convertString(String korTitle) {
         for (Category category : Category.values()) {
-            if(Objects.equals(category.name().toLowerCase(), title.toLowerCase())) return category;
+            if(Objects.equals(category.title, korTitle)) return category;
         }
         return INVALID;
     }

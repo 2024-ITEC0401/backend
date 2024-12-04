@@ -1,11 +1,15 @@
 spring:
   application:
     name: backend
+  config:
+    import: optional:file:dev.env[.properties]
   datasource:
+    driver-class-name: ${DRIVER_CLASS_NAME}
     url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_DB_NAME}
     username: ${RDS_USERNAME}
     password: ${RDS_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      max-lifetime: 170000
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,9 +25,9 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE.CLIENT-ID}
-            client-secret: ${GOOGLE.CLIENT-SECRET}
-            redirect-uri: ${GOOGLE.REDIRECT-URI}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
             scope:
               - email
               - profile
