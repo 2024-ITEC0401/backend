@@ -74,6 +74,8 @@ public class CoordinationServiceImpl implements CoordinationService {
             coordinationRepository.save(coordination);  // 먼저 Coordination 생성하고 다른 테이블에서 참조해야 잘 참조됨.
             // CoordinationClothingService 사용하기 - N:M 매핑 하기
             for (Long id : temp.getClothing_ids()) {
+                System.out.println(id);
+                if (id == null) continue;
                 coordinationClothingService.createCoordinationClothing(coordination, clothingService.getClothingEntity(id, authentication));
             }
         }
