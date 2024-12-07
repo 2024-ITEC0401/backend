@@ -2,6 +2,7 @@ package com.itec0401.backend.domain.coordination.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itec0401.backend.domain.clothing.entity.Clothing;
 import com.itec0401.backend.domain.clothing.service.ClothingService;
 import com.itec0401.backend.domain.coordination.dto.*;
 import com.itec0401.backend.domain.coordination.entity.Coordination;
@@ -35,7 +36,6 @@ public class CoordinationServiceImpl implements CoordinationService {
     private final ClothingService clothingService;
     private final CoordinationClothingService coordinationClothingService;
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     @Transactional
@@ -84,6 +84,7 @@ public class CoordinationServiceImpl implements CoordinationService {
     private BasicCodiResponse getBasicCodiSet(BasicCodiRequestToPython dto){
         // Python 과 통신 - List<Dto> 형태의 결과를 반환
         BasicCodiResponse response;
+        ObjectMapper objectMapper = new ObjectMapper();
         String url = "http://34.64.155.160:5000/get_codis";
         try{
             String jsonResponse = restTemplate.postForObject(url, dto, String.class);
@@ -108,15 +109,22 @@ public class CoordinationServiceImpl implements CoordinationService {
         }
         User validUser = user.get();
 
+        // 유저가 가진 옷 정보를 List<ClothingData> Dto로 변환
+        List<Long> clothingDataIds = new ArrayList<>();
+        for (Clothing clothing : validUser.getClothingList()){
+            clothingDataIds.add(clothing.getId());
+        }
+
         // dto 가공
         NLCodiRequestToPython toPythonNL = NLCodiRequestToPython.builder()
                 .natural_language(dto.getNatural_language())
-                .clothing(clothingService.addClothingInfo(dto.getClothing()))
+                .clothing(clothingService.addClothingInfo(clothingDataIds))
                 .build();
 
         // python api 사용
         CodiResponse apiResult = getCodiUsingNL(toPythonNL);
-
+        System.out.println(apiResult.getClothing_ids().size());
+        System.out.println(apiResult.getClothing_ids());
         // 받아온 내용을 기반으로 Coordination 엔티티, CoordinationClothing 엔티티 생성
         Coordination coordination = Coordination.builder()
                 .name(apiResult.getName())
@@ -127,6 +135,7 @@ public class CoordinationServiceImpl implements CoordinationService {
         coordinationRepository.save(coordination);
         // CoordinationClothingService 사용하기 - N:M 매핑 하기
         for (Long id : apiResult.getClothing_ids()) {
+            if (id == null) continue;
             coordinationClothingService.createCoordinationClothing(coordination, clothingService.getClothingEntity(id, authentication));
         }
         return new ResponseEntity<>(HttpStatus.OK);
@@ -135,6 +144,7 @@ public class CoordinationServiceImpl implements CoordinationService {
     private CodiResponse getCodiUsingNL(NLCodiRequestToPython dto){
         HttpEntity<NLCodiRequestToPython> requestEntity = new HttpEntity<>(dto);
         CodiResponse response;
+        ObjectMapper objectMapper = new ObjectMapper();
         String url = "http://34.64.155.160:5000/get_nl_codi";
         try{
             String jsonResponse = restTemplate.postForObject(url, dto, String.class);

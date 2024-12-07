@@ -153,9 +153,9 @@ public class ClothingServiceImpl implements ClothingService {
     public List<ClothingData> addClothingInfo(List<Long> clothingIds){
         List<ClothingData> clothingDataDtos = new ArrayList<>();
         for (Long id : clothingIds){
-            Optional<Clothing> clothing = clothingRepository.findById(id);
+            Optional<Clothing> clothing = clothingRepository.findByClothingId(id);
             if (clothing.isEmpty()) {
-                throw new ClothingNotFoundException("Clothing not found");
+                throw new ClothingNotFoundException("addClothingInfo : Clothing not found");
             }
             Clothing c = clothing.get();
             clothingDataDtos.add(ClothingData.toDto(c));
