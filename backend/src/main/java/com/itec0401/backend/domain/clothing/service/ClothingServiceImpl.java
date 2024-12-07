@@ -1,20 +1,24 @@
 package com.itec0401.backend.domain.clothing.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itec0401.backend.domain.clothing.dto.ClothInfoDto;
 import com.itec0401.backend.domain.clothing.dto.ClothRequestDto;
+import com.itec0401.backend.domain.clothing.dto.DeleteImageUri;
 import com.itec0401.backend.domain.clothing.entity.Clothing;
 import com.itec0401.backend.domain.clothing.repository.ClothingRepository;
 import com.itec0401.backend.domain.coordination.dto.ClothingData;
 import com.itec0401.backend.domain.user.entity.User;
 import com.itec0401.backend.domain.user.service.UserService;
 import com.itec0401.backend.global.exception.ClothingNotFoundException;
+import com.itec0401.backend.global.exception.NullResponseFromApiException;
 import com.itec0401.backend.global.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.Optional;
 public class ClothingServiceImpl implements ClothingService {
     private final ClothingRepository clothingRepository;
     private final UserService userService;
+    private final RestTemplate restTemplate;
 
     @Transactional
     public ResponseEntity<Void> createClothing(ClothRequestDto dto, Authentication authentication) {
@@ -118,6 +123,29 @@ public class ClothingServiceImpl implements ClothingService {
         }
         User validUser = user.get();
 
+        Optional<Clothing> clothing = clothingRepository.findByClothingId(id);
+        if (clothing.isEmpty()) {
+            throw new ClothingNotFoundException("Clothing not found");
+        }
+        Clothing c = clothing.get();
+        DeleteImageUri deleteImageUri = DeleteImageUri.builder().imageUri(c.getImageUri()).build();
+
+        String url = "http://34.64.155.160:5000/delete_image";
+        try{
+            // 요청 헤더 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", "application/json");
+
+            // HttpEntity 객체 생성 (헤더와 바디 포함)
+            HttpEntity<Object> requestEntity = new HttpEntity<>(deleteImageUri, headers);
+
+            // DELETE 요청 보내기
+            ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.DELETE, requestEntity, Void.class);
+            System.out.println(response.getStatusCode());
+        } catch (ResourceAccessException e){
+            System.out.println(e.getMessage());
+            throw new NullResponseFromApiException("Error while using Python API");
+        }
         return new ResponseEntity<>(clothingRepository.deleteByTwoId(validUser.getId(), id), HttpStatus.OK);
     }
 
