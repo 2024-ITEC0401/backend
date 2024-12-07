@@ -100,7 +100,7 @@ public class CoordinationServiceImpl implements CoordinationService {
 
     @Override
     @Transactional
-    public ResponseEntity<Void> coordRecommendUsingNaturalLanguage(NLCodiRequestToSpring dto, Authentication authentication){
+    public ResponseEntity<CodiInfoWithImages> coordRecommendUsingNaturalLanguage(NLCodiRequestToSpring dto, Authentication authentication){
         // 자연어 문장과 여러 옷들로 코디 1개 추천 받기
         // 권한 확인
         Optional<User> user = userService.checkPermission(authentication);
@@ -138,7 +138,15 @@ public class CoordinationServiceImpl implements CoordinationService {
             if (id == null) continue;
             coordinationClothingService.createCoordinationClothing(coordination, clothingService.getClothingEntity(id, authentication));
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        CodiInfoWithImages newCodiInfoImages = CodiInfoWithImages.builder()
+                .id(coordination.getId())
+                .name(coordination.getName())
+                .description(coordination.getDescription())
+                .hashtags(coordination.getHashtags())
+                .createdAt(coordination.getCreatedAt())
+                .clothingImages(clothingService.getClothingImages(validUser.getId(), coordination.getId()))
+                .build();
+        return new ResponseEntity<>(newCodiInfoImages, HttpStatus.OK);
     }
 
     private CodiResponse getCodiUsingNL(NLCodiRequestToPython dto){
@@ -159,16 +167,16 @@ public class CoordinationServiceImpl implements CoordinationService {
     }
 
     @Override
-    public ResponseEntity<List<AllCodiInfo>> getAllCodiInfos(Authentication authentication){
+    public ResponseEntity<List<CodiInfoWithImages>> getAllCodiInfoWithImages(Authentication authentication){
         Optional<User> user = userService.checkPermission(authentication);
         if (user.isEmpty()){
             throw new UserNotFoundException("User not found");
         }
         User validUser = user.get();
 
-        List<AllCodiInfo> allCodiInfoList = new ArrayList<>();
+        List<CodiInfoWithImages> codiInfoWithImagesList = new ArrayList<>();
         for (Coordination coordination : validUser.getCoordinationList()){
-            allCodiInfoList.add(AllCodiInfo.builder()
+            codiInfoWithImagesList.add(CodiInfoWithImages.builder()
                             .id(coordination.getId())
                             .name(coordination.getName())
                             .description(coordination.getDescription())
@@ -177,7 +185,7 @@ public class CoordinationServiceImpl implements CoordinationService {
                             .clothingImages(clothingService.getClothingImages(validUser.getId(), coordination.getId()))
                             .build());
         }
-        return new ResponseEntity<>(allCodiInfoList, HttpStatus.OK);
+        return new ResponseEntity<>(codiInfoWithImagesList, HttpStatus.OK);
     }
 
     @Override

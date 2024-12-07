@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-public class AllCodiInfo {
+public class CodiInfoWithImages {
     private final Long id;
     private final String name;
     private final String description;
@@ -16,7 +16,7 @@ public class AllCodiInfo {
     private final List<String> clothingImages;
 
     @Builder
-    public AllCodiInfo(Long id, String name, String description, String hashtags, LocalDateTime createdAt, List<String> clothingImages) {
+    public CodiInfoWithImages(Long id, String name, String description, String hashtags, LocalDateTime createdAt, List<String> clothingImages) {
         this.id = id;
         this.name = name;
         this.description = description;

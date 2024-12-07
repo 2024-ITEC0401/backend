@@ -2,7 +2,7 @@ package com.itec0401.backend.domain.coordination.controller;
 
 import com.itec0401.backend.domain.coordination.dto.BasicCodiRequestToSpring;
 import com.itec0401.backend.domain.coordination.dto.CodiDetails;
-import com.itec0401.backend.domain.coordination.dto.AllCodiInfo;
+import com.itec0401.backend.domain.coordination.dto.CodiInfoWithImages;
 import com.itec0401.backend.domain.coordination.dto.NLCodiRequestToSpring;
 import com.itec0401.backend.domain.coordination.service.CoordinationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ public class CoordinationController {
                     "추천된 결과는 바로 DB에 저장됨."
     )
     @PostMapping("/rec/natural-language")
-    public ResponseEntity<Void> coordRecommendUsingNaturalLanguage(@RequestBody NLCodiRequestToSpring dto, Authentication authentication){
+    public ResponseEntity<CodiInfoWithImages> coordRecommendUsingNaturalLanguage(@RequestBody NLCodiRequestToSpring dto, Authentication authentication){
         return coordinationService.coordRecommendUsingNaturalLanguage(dto, authentication);
     }
 
@@ -45,8 +45,8 @@ public class CoordinationController {
             description = "코디의 상세 정보가 열람되지는 않음. 추후 수정해야할 수도...(이미지 정보를 같이 반환하는 방향으로..)"
     )
     @GetMapping
-    public ResponseEntity<List<AllCodiInfo>> getAllCoordinationInfos(Authentication authentication){
-        return coordinationService.getAllCodiInfos(authentication);
+    public ResponseEntity<List<CodiInfoWithImages>> getAllCoordinationInfos(Authentication authentication){
+        return coordinationService.getAllCodiInfoWithImages(authentication);
     }
 
     @Operation(
