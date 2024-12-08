@@ -40,3 +40,4 @@ out/
 src/main/resources/application-secret.yml
 dev.env
 ec2.dev
+src/main/resources/keystore.p12
