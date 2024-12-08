@@ -89,7 +89,8 @@ public class UserServiceImpl implements UserService{
     public ResponseEntity<Boolean> isEmailEmpty(String email) {
         // 이메일이 적합한지 판단
         if (!EmailValidator.isValidEmail(email)){
-            throw new EmailValidationException("Invalid email format");
+//            throw new EmailValidationException("Invalid email format");
+            return new ResponseEntity<>(false, HttpStatus.OK);
         }
         return new ResponseEntity<>(userRepository.findByEmail(email).isEmpty(), HttpStatus.OK);
     }
