@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collections;
 
@@ -17,15 +18,17 @@ import java.util.Collections;
 public class SecurityConfig {
 
     // Security 단에서 Cors 설정하는 익명 클래스
+    @Bean
     CorsConfigurationSource corsConfigurationSource() {
-        return request -> {
-            CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedHeaders(Collections.singletonList("*"));
-            config.setAllowedMethods(Collections.singletonList("*"));
-            config.setAllowedOriginPatterns(Collections.singletonList("http://localhost:5173")); // 허용할 origin
-            config.setAllowCredentials(true);
-            return config;
-        };
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(Collections.singletonList("https://www.look-4-me.com")); // 허용할 origin
+        config.setAllowedHeaders(Collections.singletonList("*"));
+        config.setAllowedMethods(Collections.singletonList("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config); // 모든 경로에 대해 CORS 설정 적용
+        return source;
     }
 
     @Bean
@@ -35,6 +38,12 @@ public class SecurityConfig {
                 .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()))
                 .csrf((csrf) -> csrf.disable())
                 .headers((headers) -> headers.disable());
+//                .authorizeRequests(authorizeRequests -> authorizeRequests
+//                        .anyRequest().authenticated() // 모든 요청은 인증 필요
+//                )
+//                .requiresChannel(channel -> channel
+//                        .anyRequest().requiresSecure() // 모든 요청을 HTTPS로 요구
+//                );
         return http.build();
     }
 
