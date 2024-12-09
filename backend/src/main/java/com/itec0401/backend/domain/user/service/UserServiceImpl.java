@@ -5,11 +5,13 @@ import com.itec0401.backend.domain.color.service.ColorService;
 import com.itec0401.backend.domain.style.entity.Style;
 import com.itec0401.backend.domain.style.service.StyleService;
 import com.itec0401.backend.domain.user.dto.*;
+import com.itec0401.backend.domain.user.emailvalidator.EmailValidator;
 import com.itec0401.backend.domain.user.entity.User;
 import com.itec0401.backend.domain.user.jwt.JwtTokenProvider;
 import com.itec0401.backend.domain.user.repository.UserRepository;
 import com.itec0401.backend.domain.usercolor.service.UserColorService;
 import com.itec0401.backend.domain.userstyle.service.UserStyleService;
+import com.itec0401.backend.global.exception.EmailValidationException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -85,6 +87,11 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public ResponseEntity<Boolean> isEmailEmpty(String email) {
+        // 이메일이 적합한지 판단
+        if (!EmailValidator.isValidEmail(email)){
+//            throw new EmailValidationException("Invalid email format");
+            return new ResponseEntity<>(false, HttpStatus.OK);
+        }
         return new ResponseEntity<>(userRepository.findByEmail(email).isEmpty(), HttpStatus.OK);
     }
 

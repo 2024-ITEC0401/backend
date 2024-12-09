@@ -1,14 +1,12 @@
 package com.itec0401.backend.domain.coordination.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itec0401.backend.domain.clothing.entity.Clothing;
 import com.itec0401.backend.domain.clothing.service.ClothingService;
 import com.itec0401.backend.domain.coordination.dto.*;
 import com.itec0401.backend.domain.coordination.entity.Coordination;
 import com.itec0401.backend.domain.coordination.repository.CoordinationRepository;
-import com.itec0401.backend.domain.coordinationclothing.entity.CoordinationClothing;
-import com.itec0401.backend.domain.coordinationclothing.repository.CoordinationClothingRepository;
 import com.itec0401.backend.domain.coordinationclothing.service.CoordinationClothingService;
 import com.itec0401.backend.domain.user.entity.User;
 import com.itec0401.backend.domain.user.service.UserService;
@@ -18,9 +16,7 @@ import com.itec0401.backend.global.exception.NullResponseFromApiException;
 import com.itec0401.backend.global.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -40,7 +36,6 @@ public class CoordinationServiceImpl implements CoordinationService {
     private final ClothingService clothingService;
     private final CoordinationClothingService coordinationClothingService;
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     @Transactional
@@ -79,6 +74,8 @@ public class CoordinationServiceImpl implements CoordinationService {
             coordinationRepository.save(coordination);  // 먼저 Coordination 생성하고 다른 테이블에서 참조해야 잘 참조됨.
             // CoordinationClothingService 사용하기 - N:M 매핑 하기
             for (Long id : temp.getClothing_ids()) {
+                System.out.println(id);
+                if (id == null) continue;
                 coordinationClothingService.createCoordinationClothing(coordination, clothingService.getClothingEntity(id, authentication));
             }
         }
@@ -89,6 +86,7 @@ public class CoordinationServiceImpl implements CoordinationService {
     private BasicCodiResponse getBasicCodiSet(BasicCodiRequestToPython dto){
         // Python 과 통신 - List<Dto> 형태의 결과를 반환
         BasicCodiResponse response;
+        ObjectMapper objectMapper = new ObjectMapper();
         String url = "http://34.64.155.160:5000/get_codis";
         try{
             String jsonResponse = restTemplate.postForObject(url, dto, String.class);
@@ -104,7 +102,7 @@ public class CoordinationServiceImpl implements CoordinationService {
 
     @Override
     @Transactional
-    public ResponseEntity<Void> coordRecommendUsingNaturalLanguage(NLCodiRequestToSpring dto, Authentication authentication){
+    public ResponseEntity<CodiInfoWithImages> coordRecommendUsingNaturalLanguage(NLCodiRequestToSpring dto, Authentication authentication){
         // 자연어 문장과 여러 옷들로 코디 1개 추천 받기
         // 권한 확인
         Optional<User> user = userService.checkPermission(authentication);
@@ -113,15 +111,22 @@ public class CoordinationServiceImpl implements CoordinationService {
         }
         User validUser = user.get();
 
+        // 유저가 가진 옷 정보를 List<ClothingData> Dto로 변환
+        List<Long> clothingDataIds = new ArrayList<>();
+        for (Clothing clothing : validUser.getClothingList()){
+            clothingDataIds.add(clothing.getId());
+        }
+
         // dto 가공
         NLCodiRequestToPython toPythonNL = NLCodiRequestToPython.builder()
                 .natural_language(dto.getNatural_language())
-                .clothing(clothingService.addClothingInfo(dto.getClothing()))
+                .clothing(clothingService.addClothingInfo(clothingDataIds))
                 .build();
 
         // python api 사용
         CodiResponse apiResult = getCodiUsingNL(toPythonNL);
-
+        System.out.println(apiResult.getClothing_ids().size());
+        System.out.println(apiResult.getClothing_ids());
         // 받아온 내용을 기반으로 Coordination 엔티티, CoordinationClothing 엔티티 생성
         Coordination coordination = Coordination.builder()
                 .name(apiResult.getName())
@@ -132,14 +137,24 @@ public class CoordinationServiceImpl implements CoordinationService {
         coordinationRepository.save(coordination);
         // CoordinationClothingService 사용하기 - N:M 매핑 하기
         for (Long id : apiResult.getClothing_ids()) {
+            if (id == null) continue;
             coordinationClothingService.createCoordinationClothing(coordination, clothingService.getClothingEntity(id, authentication));
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        CodiInfoWithImages newCodiInfoImages = CodiInfoWithImages.builder()
+                .id(coordination.getId())
+                .name(coordination.getName())
+                .description(coordination.getDescription())
+                .hashtags(coordination.getHashtags())
+                .createdAt(coordination.getCreatedAt())
+                .clothingImages(clothingService.getClothingImages(validUser.getId(), coordination.getId()))
+                .build();
+        return new ResponseEntity<>(newCodiInfoImages, HttpStatus.OK);
     }
 
     private CodiResponse getCodiUsingNL(NLCodiRequestToPython dto){
         HttpEntity<NLCodiRequestToPython> requestEntity = new HttpEntity<>(dto);
         CodiResponse response;
+        ObjectMapper objectMapper = new ObjectMapper();
         String url = "http://34.64.155.160:5000/get_nl_codi";
         try{
             String jsonResponse = restTemplate.postForObject(url, dto, String.class);
@@ -154,22 +169,25 @@ public class CoordinationServiceImpl implements CoordinationService {
     }
 
     @Override
-    public ResponseEntity<List<CodiInfo>> getAllCodiInfos(Authentication authentication){
+    public ResponseEntity<List<CodiInfoWithImages>> getAllCodiInfoWithImages(Authentication authentication){
         Optional<User> user = userService.checkPermission(authentication);
         if (user.isEmpty()){
             throw new UserNotFoundException("User not found");
         }
         User validUser = user.get();
 
-        List<CodiInfo> codiInfoList = new ArrayList<>();
+        List<CodiInfoWithImages> codiInfoWithImagesList = new ArrayList<>();
         for (Coordination coordination : validUser.getCoordinationList()){
-            codiInfoList.add(CodiInfo.builder()
+            codiInfoWithImagesList.add(CodiInfoWithImages.builder()
                             .id(coordination.getId())
                             .name(coordination.getName())
                             .description(coordination.getDescription())
-                            .hashtags(coordination.getHashtags()).build());
+                            .hashtags(coordination.getHashtags())
+                            .createdAt(coordination.getCreatedAt())
+                            .clothingImages(clothingService.getClothingImages(validUser.getId(), coordination.getId()))
+                            .build());
         }
-        return new ResponseEntity<>(codiInfoList, HttpStatus.OK);
+        return new ResponseEntity<>(codiInfoWithImagesList, HttpStatus.OK);
     }
 
     @Override
@@ -211,6 +229,7 @@ public class CoordinationServiceImpl implements CoordinationService {
                 .name(coordination.getName())
                 .description(coordination.getDescription())
                 .hashtags(coordination.getHashtags())
+                .createdAt(coordination.getCreatedAt())
                 .clothingList(clothingService.getClothingDetails(validUser.getId(), id))
                 .build(), HttpStatus.OK);
     }

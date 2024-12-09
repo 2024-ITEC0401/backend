@@ -19,4 +19,5 @@ public interface ClothingService {
     List<ClothingData> addClothingInfo(List<Long> clothingIds);
     Clothing getClothingEntity(Long id, Authentication authentication);
     List<ClothInfoDto> getClothingDetails(Long user_id, Long coordination_id);
+    List<String> getClothingImages(Long user_id, Long coordination_id);
 }

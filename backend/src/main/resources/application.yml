@@ -44,5 +44,12 @@ server:
       force: true
   tomcat:
     max-http-form-post-size: 15MB
+  # Set https
+#  port: 8080
+#  ssl:
+#    key-store: classpath:keystore.p12
+#    key-store-password: ${HTTPS_KEY_STORE_PASSWORD}
+#    keyStoreType: ${HTTPS_KEY_STORE_TYPE}
+#    key-alias: ${HTTPS_KEY_ALIAS}
 JWT:
   SECRET-KEY: ${JWT_KEY}

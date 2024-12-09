@@ -38,4 +38,10 @@ public class ExceptionControllerAdvice {
         log.info("CoordinationNotFoundException: {}", e.getMessage());
         return new ResponseEntity<>(ErrorResult.builder().code("400").message("CoordinationNotFound-EX").build(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(EmailValidationException.class)
+    public ResponseEntity<ErrorResult> EmailValidationException(EmailValidationException e) {
+        log.info("EmailValidationException: {}", e.getMessage());
+        return new ResponseEntity<>(ErrorResult.builder().code("400").message("EmailValidation-EX").build(), HttpStatus.BAD_REQUEST);
+    }
 }
